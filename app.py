@@ -1,5 +1,4 @@
 from flask import Flask, jsonify, request
-from scraper.test import save_file
 from scraper.my_utils import check_exists_and_make_dir
 import scraper.youtube_scraper as youtube_sp
 import scraper.twitter_scraper as twitter_sp
@@ -11,12 +10,21 @@ import scraper.IMDb_scraper as imdb_sp
 import scraper.rottentomatoes_scraper as tomato_sp
 
 app = Flask(__name__)
+check_exists_and_make_dir("out")
+check_exists_and_make_dir("profile")
+print("hello world")
 
 
 @app.route('/')
 def hello_world():  # put application's code here
-    save_file()
-    return 'Hello World!'
+    json_output = {
+        "code": 0,
+        "msg": "响应成功",
+        "data": [
+
+        ]
+    }
+    return jsonify(json_output)
 
 
 @app.route('/scrap_facebook', methods=["GET"])
@@ -148,6 +156,4 @@ def scrap_tomato():
 
 
 if __name__ == '__main__':
-    check_exists_and_make_dir("out")
-    check_exists_and_make_dir("profile")
-    app.run(port=9092)
+    app.run()
