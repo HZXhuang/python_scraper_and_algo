@@ -6,16 +6,16 @@ import uuid
 youdao_url = 'https://openapi.youdao.com/api'  # 有道api地址
 
 
-def youdao_translate(translate_text):
+def base_translate(translate_text, to_lang="zh-CHS"):
     # 翻译文本生成sign前进行的处理
     input_text = ""
 
     # 当文本长度小于等于20时，取文本
-    if (len(translate_text) <= 20):
+    if len(translate_text) <= 20:
         input_text = translate_text
 
     # 当文本长度大于20时，进行特殊处理
-    elif (len(translate_text) > 20):
+    elif len(translate_text) > 20:
         input_text = translate_text[:10] + str(len(translate_text)) + translate_text[-10:]
 
     time_curtime = int(time.time())  # 秒级时间戳获取
@@ -29,7 +29,7 @@ def youdao_translate(translate_text):
     data = {
         'q': translate_text,  # 翻译文本
         # 'from': "en",  # 源语言
-        'to': "zh-CHS",  # 翻译语言
+        'to': to_lang,  # 翻译语言
         'appKey': app_id,  # 应用id
         'salt': uu_id,  # 随机生产的uuid码
         'sign': sign,  # 签名
@@ -41,5 +41,15 @@ def youdao_translate(translate_text):
     return r["translation"][0]
 
 
+def youdao_translate(translate_text):
+    return base_translate(translate_text, "zh-CHS")
+
+
+def translate_to_en(text):
+    return base_translate(text, "en")
+
+
 if __name__ == "__main__":
-    print(youdao_translate(""))
+    # print(youdao_translate("hello"))
+    print(translate_to_en("哪吒之魔童降世"))
+    pass

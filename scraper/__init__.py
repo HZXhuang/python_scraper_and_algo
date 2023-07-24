@@ -1,6 +1,23 @@
 import os
+from selenium import webdriver
 
 base_path = os.path.dirname(os.path.abspath(__file__))
+proxy = "127.0.0.1:10809"
+max_comment_len = 150
+
+
+def get_chrome_options(config_proxy=True):
+    chrome_options = webdriver.ChromeOptions()
+    if config_proxy:  # 是否添加代理
+        chrome_options.add_argument("--proxy-server={}".format(proxy))
+    # chrome_options.add_argument("headless")
+    # chrome_options.add_argument("–no-sandbox")
+    chrome_options.add_argument('lang=zh-CN,zh,zh-TW,en-US,en')
+    chrome_options.add_argument('disable-notifications')
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    # chrome_options.add_experimental_option("detach", True)
+    return chrome_options
+
 
 nameMap = {
     "Afghanistan": "阿富汗",

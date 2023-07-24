@@ -37,6 +37,10 @@ def list_channel_country(youtube, channel_id, comment):
         return my_utils.identify_lang_to_country(comment)
 
 
+def scrap_reviews(keyword, workId):
+    return get_comments(keyword, 10, 100, workId)
+
+
 def get_comments(keyword, max_results, max_comment_cnt, workId):
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
@@ -137,7 +141,8 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=0, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    return True
 
     ### write to json file
     # result = []
@@ -156,5 +161,4 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
 
 
 if __name__ == "__main__":
-    # get_comments("红楼梦", 15, 200)
-    insert_comment("真实一部好电影", "好电影", "30", 1, "积极", "美国", "Youtube", "2020-05-23")
+    scrap_reviews("流浪地球", 2)

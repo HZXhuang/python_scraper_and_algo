@@ -9,7 +9,7 @@ import json
 import csv
 from scraper.my_utils import identify_lang_to_country, analyze_polarity, text_clean, parse_date_format
 from scraper.my_translater import youdao_translate
-from scraper import base_path
+from scraper import base_path, get_chrome_options
 from sql_dao.sql_utils import insert_comment
 
 
@@ -19,11 +19,7 @@ def get_element_by_xpath(driver, xpath_pattern):
 
 
 def create_webdriver_instance():
-    options = webdriver.ChromeOptions()
-    proxy = "127.0.0.1:10809"
-    options.add_argument("--proxy-server={}".format(proxy))
-    # options.add_argument("headless")
-    br = webdriver.Chrome(chrome_options=options)
+    br = webdriver.Chrome(chrome_options=get_chrome_options(True))
     br.get("https://twitter.com")
     # 从文件中读取cookies
     with open(base_path + "/profile/cookies-twitter.json", "r") as f:
@@ -76,7 +72,7 @@ def save_tweet_data_to_csv(records, filepath, workId, mode='a+'):
             else:
                 row.insert(1, str(row[0]))
             row.insert(3, workId)
-            row.insert(4, analyze_polarity(row[0]))
+            row.insert(4, analyze_polarity(row[1]))
             row.insert(5, country)
             row.insert(6, "Twitter")
             row.append("Twitter")
@@ -127,7 +123,8 @@ def extract_data_from_current_tweet_card(card):
 
 
 def login_twitter():
-    br = webdriver.Chrome()
+    # 需要代理
+    br = webdriver.Chrome(options=get_chrome_options(True))
     br.get("https://twitter.com/i/flow/login")
     # 填写手机号
     # time.sleep(5)
@@ -151,11 +148,12 @@ def login_twitter():
 
     # 登陆
     get_element_by_xpath(br, '//*[@id="layers"]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[2]/div/div[1]/div/div/div/div').click()
-    time.sleep(5)
+    time.sleep(8)
     cookies = br.get_cookies()
     # print(cookies)
-    with open('./cookies-twitter.json', 'w') as f:
+    with open(base_path + '/profile/cookies-twitter.json', 'w') as f:
         f.write(json.dumps(cookies))
+    time.sleep(2)
     br.quit()
 
 
@@ -198,6 +196,7 @@ def scrap_twitter(keyword, workId):
     save_tweet_data_to_csv(None, path, workId, mode='w')  # 创建一个新的文件
     for tab_name in tab_names:
         main(keyword, path, tab_name, unique_tweets, max_tweets, workId)
+    return True
 
 
 if __name__ == "__main__":
