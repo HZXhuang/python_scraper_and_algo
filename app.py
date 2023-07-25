@@ -12,7 +12,6 @@ import scraper.rottentomatoes_scraper as tomato_sp
 app = Flask(__name__)
 check_exists_and_make_dir("out")
 check_exists_and_make_dir("profile")
-print("hello world")
 
 
 @app.route('/')

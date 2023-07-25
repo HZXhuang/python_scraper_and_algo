@@ -111,14 +111,14 @@ def extract_video_comments(driver, url, comments, workId, max_video_comment_num)
             post_time = "2023-03-04"
         country = identify_lang_to_country(comment)
         if country != "中国":
-            translated = youdao_translate(comment)
-            time.sleep(0.5)
-            # translated = comment
+            # translated = youdao_translate(comment)
+            # time.sleep(0.5)
+            translated = comment
         else:
             translated = comment
         sentiment = analyze_polarity(translated)
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-        insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        # insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
     pass
 
 
