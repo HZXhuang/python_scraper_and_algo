@@ -1,3 +1,5 @@
+import time
+
 from httplib2 import socks, ProxyInfo, Http
 import numpy as np
 from googleapiclient.discovery import build
@@ -6,10 +8,10 @@ import pandas as pd
 import json
 import pycountry
 from scraper import base_path
-from scraper import my_utils
 from scraper import nameMap
 from sql_dao.sql_utils import insert_comment
 from scraper.my_translater import youdao_translate
+from scraper.my_utils import parse_date_format, identify_lang_to_country, text_clean, analyze_polarity
 
 scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 platform = "Youtube"
@@ -19,7 +21,7 @@ YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'
 
 # 设置http代理，
-proxy_info = ProxyInfo(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080)
+proxy_info = ProxyInfo(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 10808)
 http = Http(timeout=30, proxy_info=proxy_info)
 
 
@@ -34,7 +36,7 @@ def list_channel_country(youtube, channel_id, comment):
         country = results['items'][0]['snippet']['country']
         return nameMap[pycountry.countries.get(alpha_2=country).name]
     else:
-        return my_utils.identify_lang_to_country(comment)
+        return identify_lang_to_country(comment)
 
 
 def scrap_reviews(keyword, workId):
@@ -108,19 +110,21 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
                             # You can choose what you need. You can print the data information you can get and crawl it as needed.
                             comment = item["snippet"]["topLevelComment"]
                             # author = comment["snippet"]["authorDisplayName"]
-                            text = my_utils.text_clean(comment["snippet"]["textDisplay"])
+                            text = text_clean(comment["snippet"]["textDisplay"])
                             likeCount = comment["snippet"]['likeCount']
-                            publishtime = comment['snippet']['publishedAt']
+                            publishtime = parse_date_format(comment['snippet']['publishedAt'])
                             # channelId = comment['snippet']['authorChannelId']["value"]
-                            country = my_utils.identify_lang_to_country(text)
+                            country = identify_lang_to_country(text)
                             if country != "中国":
                                 translated = youdao_translate(text)
+                                time.sleep(1)
+                                # translated = text
                             else:
                                 translated = text
                             insert_comment(text, translated, likeCount, workId,
-                                           my_utils.analyze_polarity(translated), country, platform, publishtime)
+                                           analyze_polarity(translated), country, platform, publishtime)
                             comments.append([text, translated, likeCount, workId,
-                                             my_utils.analyze_polarity(translated), country, platform, publishtime])
+                                             analyze_polarity(translated), country, platform, publishtime])
                         if totalResults < max_comment_cnt:  # 获取的最大评论数
                             further = False
                         else:
