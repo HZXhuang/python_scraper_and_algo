@@ -40,10 +40,10 @@ def list_channel_country(youtube, channel_id, comment):
 
 
 def scrap_reviews(keyword, workId):
-    return get_comments(keyword, 10, 100, workId)
+    return get_comments(keyword, 8, 1, 50, workId)
 
 
-def get_comments(keyword, max_results, max_comment_cnt, workId):
+def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
@@ -52,7 +52,7 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
     search_response = youtube.search().list(  # 根据搜索关键词查询匹配的视频id
         q=keyword,
         part='id,snippet',
-        maxResults=max_results
+        maxResults=max_videos
     ).execute()
     videos = []
     for search_result in search_response.get('items', []):
@@ -86,7 +86,11 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
 
                 first = True
                 further = True
+                cnt = 0
                 while further:
+                    cnt += 1
+                    if cnt > max_pages:
+                        break
                     halt = False
                     if not first:
                         print('..')
@@ -111,6 +115,9 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
                             comment = item["snippet"]["topLevelComment"]
                             # author = comment["snippet"]["authorDisplayName"]
                             text = text_clean(comment["snippet"]["textDisplay"])
+                            # print(text)
+                            if len(text.strip()) == 0:
+                                continue
                             likeCount = comment["snippet"]['likeCount']
                             publishtime = parse_date_format(comment['snippet']['publishedAt'])
                             # channelId = comment['snippet']['authorChannelId']["value"]
@@ -121,8 +128,10 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
                                 # translated = text
                             else:
                                 translated = text
-                            insert_comment(text, translated, likeCount, workId,
+                            success = insert_comment(text, translated, likeCount, workId,
                                            analyze_polarity(translated), country, platform, publishtime)
+                            if not success:
+                                continue
                             comments.append([text, translated, likeCount, workId,
                                              analyze_polarity(translated), country, platform, publishtime])
                         if totalResults < max_comment_cnt:  # 获取的最大评论数
@@ -165,4 +174,4 @@ def get_comments(keyword, max_results, max_comment_cnt, workId):
 
 
 if __name__ == "__main__":
-    scrap_reviews("流浪地球", 2)
+    scrap_reviews("流浪地球2", 4)

@@ -10,14 +10,18 @@ def get_chrome_options(config_proxy=True):
     chrome_options = webdriver.ChromeOptions()
     if config_proxy:  # 是否添加代理
         chrome_options.add_argument("--proxy-server={}".format(proxy))
-    # chrome_options.add_argument("--headless")
-    # chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument('lang=zh-CN,zh,zh-TW,en-US,en')
     chrome_options.add_argument('disable-notifications')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
     # chrome_options.add_experimental_option("detach", True)
     return chrome_options
+
+
+if __name__ == "__main__":
+    print(get_chrome_options(True).arguments)
 
 
 nameMap = {

@@ -164,7 +164,7 @@ def main(keyword, workId):
     for video_wrapper in video_wrapper_list:
         video_url = video_wrapper.find_element(By.XPATH, './/a').get_attribute("href")
         raw_watch_num = video_wrapper.find_element(
-            By.XPATH, './/span[@class="x193iq5w xeuugli x13faqbe x1vvkbs x1xmvt09 x1nxh6w3 x1sibtaa xo1l8bm xi81zsa"]'
+            By.XPATH, './/div[@class="xu06os2 x1ok221b"]'
         ).text.strip()
         print(raw_watch_num)
         print(video_url)
@@ -205,4 +205,4 @@ def scrap_reviews(keyword, workId):
 
 
 if __name__ == "__main__":
-    scrap_reviews("李子柒短视频", 5)
+    scrap_reviews("哪吒之魔童降世", 12)

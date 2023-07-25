@@ -8,6 +8,7 @@ from snownlp import SnowNLP
 import pandas as pd
 from pypinyin import lazy_pinyin
 from datetime import datetime
+import emoji
 
 
 # 识别句子的语言，并返回所属国家
@@ -37,6 +38,7 @@ def check_exists_and_make_dir(dir_name):
 def text_clean(text):
     pattern = re.compile(r'<[^>]+>', re.S)
     result = pattern.sub("", text).replace("&quot;", "").replace("&#39;", "'").replace("\"", "")
+    result = emoji.replace_emoji(result, "")  # 清除表情包
     # print(result)
     if len(result) >= max_comment_len:
         result = result[:max_comment_len - 1]
@@ -45,6 +47,8 @@ def text_clean(text):
 
 # 分析文本所包含的情感极性，积极或消极
 def analyze_polarity(text):
+    if len(text) == 0:
+        return "中立"
     res = SnowNLP(text)
     # print(res.sentiments)
     if res.sentiments < 0.45:
@@ -98,13 +102,13 @@ def chinese_to_pinyin(sentence):
 
 
 if __name__ == "__main__":
-    # print(identify_lang_to_country("barbie is way better than the wandering earth芭比爆杀流浪地球"))
-    # res = text_clean('<a href="https://www.youtube.com/watch?v=i-XvSRyOUbc&amp;t=2m35s">2:35</a> : 他说&quot;什么？I&#39;"  \'"""我听说“史密斯不的铁的吗&quot;')
-    # print(res)
+    # print(identify_lang_to_country("饥饿营销。。"))
+    res = text_clean('感恩大聰的解說❤️🫰')
+    print(res)
     # text = "Who am I to write a review of a collection of 600 year old Chinese fairytales? This edition, with notes about the translation and a great introduction, and with its updated language, is accessible, fun, and despite what Goodreads thinks, I read this over the course of a week or so, in enjoyable chunks, probably more like what was intended. I recommend this to anyone who'd like a grounding in Chinese myth or culture that they don't already have."[:150]
     # print(text)
-    # print(analyze_polarity("我凭什么给一本600年的中国童话写评论?这个版本，有关于翻译的注释和一个很好的介绍"))
+    # print(analyze_polarity("   "))
     # print(parse_date_format("2023-07-18T04:59:05.000Z"))
     # print(chinese_to_pinyin("流浪地球"))
-    print(parse_relative_date("4天"))
+    # print(parse_relative_date("4天"))
     pass

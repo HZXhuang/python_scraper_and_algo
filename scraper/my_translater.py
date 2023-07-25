@@ -38,7 +38,10 @@ def base_translate(translate_text, to_lang="zh-CHS"):
     }
 
     r = requests.get(youdao_url, params=data).json()  # 获取返回的json()内容
-    return r["translation"][0]
+    try:
+        return r["translation"][0]
+    except (KeyError, IndexError):
+        return translate_text
 
 
 def youdao_translate(translate_text):
