@@ -8,7 +8,8 @@ import time
 import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
-from scraper.my_utils import identify_lang_to_country, text_clean, parse_date_format, analyze_polarity
+from scraper.my_utils import identify_lang_to_country, text_clean, \
+    parse_date_format, analyze_polarity, fan_to_jian
 from scraper.my_translater import youdao_translate
 from sql_dao.sql_utils import insert_comment
 
@@ -30,7 +31,7 @@ def scrap_reviews(keyword, workId):
     title_list = driver.find_elements(By.XPATH, '//section[@data-testid="find-results-section-title"]/div[2]/ul/li')
     search_urls = []  # 具体的电影详情链接列表
     for title in title_list:
-        search_urls.append(title.find_element_by_xpath('.//a').get_attribute("href"))
+        search_urls.append(title.find_element(By.XPATH, './/a').get_attribute("href"))
     if len(search_urls) >= 3:
         search_limit = 3
     else:
@@ -53,7 +54,7 @@ def scrap_reviews(keyword, workId):
             try:
                 load_more_btn = driver.find_element(By.XPATH, '//button[@id="load-more-trigger"]')
                 if not load_more_btn.is_displayed():
-                    print("'加载更多'按钮不可见")
+                    print("'加载更多按钮不可见")
                     break
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight - 1000)")
                 time.sleep(2)
@@ -93,21 +94,25 @@ def scrap_reviews(keyword, workId):
                 time.sleep(0.5)
             else:
                 translated = comment
+            translated = fan_to_jian(translated)
             space_idx = likes.find(" ")
             likes = likes[:space_idx]
             post_time = parse_date_format(post_time)
             sentiment = analyze_polarity(translated)
+            success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+            if not success:
+                continue
             comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-            insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+
         time.sleep(2)
     if not comments:
         return
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 
 if __name__ == "__main__":
-    scrap_reviews("西游记", 1)
+    scrap_reviews("水浒传", 17)

@@ -8,6 +8,7 @@ import scraper.douban_scraper as douban_sp
 import scraper.goodreads_scraper as goodreads_sp
 import scraper.IMDb_scraper as imdb_sp
 import scraper.rottentomatoes_scraper as tomato_sp
+from analyzer.word_statistics import generate_gram_matrix, count_words_by_workId
 
 app = Flask(__name__)
 check_exists_and_make_dir("out")
@@ -152,6 +153,49 @@ def scrap_tomato():
         return "爬取成功"
     else:
         return "爬取失败"
+
+
+def success(data=""):
+    json_res = {
+        "code": "0",
+        "msg": "响应成功",
+        "data": data
+    }
+    return jsonify(json_res)
+
+
+def err_res(msg, code=-1):
+    json_res = {
+        "code": str(code),
+        "msg": msg,
+        "data": None
+    }
+    return jsonify(json_res)
+
+
+# 生成共现语义网络图的api接口，
+@app.route('/generate_network', methods=["GET"])
+def generate_network():
+    args = request.args
+    workId = args.get("workId", default=0, type=int)
+    country = args.get("country", default="", type=str)
+    post_time = args.get("post_time", default="", type=str)
+    if workId == 0:
+        return err_res("请输入作品ID")
+    if len(country.strip()) == 0:
+        return err_res("请输入国家")
+    if len(post_time.strip()) == 0:
+        return err_res("请输入日期")
+    return success(generate_gram_matrix(workId, country, post_time))
+
+
+@app.route("/words_freq_sta", methods=["GET"])
+def words_freq_sta():
+    args = request.args
+    workId = args.get("workId", default=0, type=int)
+    if workId == 0:
+        return err_res("请输入作品ID")
+    return success()
 
 
 if __name__ == '__main__':

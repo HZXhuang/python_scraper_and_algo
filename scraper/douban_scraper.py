@@ -53,7 +53,7 @@ def scrap_reviews(keyword, workId):
             continue
         for comment_wrapper in comment_wrapper_list:
             try:
-                comment = comment_wrapper.find_element_by_xpath('.//div[@class="short-content"]').text\
+                comment = comment_wrapper.find_element(By.XPATH, './/div[@class="short-content"]').text\
                     .replace("\n", "").replace("(展开)", "").replace("这篇影评可能有剧透", "")
             except exceptions.NoSuchElementException:
                 print("找不到评论")
@@ -63,13 +63,13 @@ def scrap_reviews(keyword, workId):
                 print("评论内容为空")
                 continue
             try:
-                post_time = comment_wrapper.find_element_by_xpath('.//span[@class="main-meta"]').text
+                post_time = comment_wrapper.find_element(By.XPATH, './/span[@class="main-meta"]').text
             except exceptions.NoSuchElementException:
                 print("找不到时间")
                 post_time = '2021-03-02'
             post_time = parse_date_format(post_time)
             try:
-                likes = comment_wrapper.find_element_by_xpath('.//a[@class="action-btn up"]').text.strip()
+                likes = comment_wrapper.find_element(By.XPATH, './/a[@class="action-btn up"]').text.strip()
                 if not likes:
                     likes = str(random.randint(0, 5))
             except exceptions.NoSuchElementException:
@@ -77,11 +77,13 @@ def scrap_reviews(keyword, workId):
                 likes = str(random.randint(0, 5))
             translated = comment
             sentiment = analyze_polarity(translated)
+            success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+            if not success:
+                continue
             comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-            insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
 
         # 进入下一个评论页
-        time.sleep(2)
+        time.sleep(3)
         try:
             next_page = web.find_element(By.XPATH, '//span[@class="next"]')
         except exceptions.NoSuchElementException:
@@ -94,9 +96,9 @@ def scrap_reviews(keyword, workId):
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 
 if __name__ == "__main__":
-    scrap_reviews("流浪地球", 4)
+    scrap_reviews("流浪地球1", 2)

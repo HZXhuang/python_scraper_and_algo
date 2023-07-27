@@ -7,7 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import json
 import csv
-from scraper.my_utils import identify_lang_to_country, analyze_polarity, text_clean, parse_date_format
+from scraper.my_utils import identify_lang_to_country, analyze_polarity, \
+    text_clean, parse_date_format, fan_to_jian
 from scraper.my_translater import youdao_translate
 from scraper import base_path, get_chrome_options
 from sql_dao.sql_utils import insert_comment
@@ -61,22 +62,27 @@ def scroll_down_page(driver, last_position, num_seconds_to_load=1.5, scroll_atte
 def save_tweet_data_to_csv(records, filepath, workId, mode='a+'):
     header = ['content', 'translated', 'likes', 'workId', 'sentiment', 'country', 'platform', 'postTime']
     with open(filepath, mode=mode, newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, dialect="mydialect")
         if mode == 'w':
             writer.writerow(header)
         if records:
             row = list(records)
             country = identify_lang_to_country(row[0])
+
             if country != "中国":
-                row.insert(1, youdao_translate(row[0]))
+                translated = youdao_translate(row[0])
             else:
-                row.insert(1, str(row[0]))
+                translated = str(row[0])
+            translated = fan_to_jian(translated)
+            row.insert(1, translated)
             row.insert(3, workId)
             row.insert(4, analyze_polarity(row[1]))
             row.insert(5, country)
             row.insert(6, "Twitter")
             row.append("Twitter")
-            insert_comment(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            success = insert_comment(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            if not success:
+                return
             writer.writerow(row)
 
 
@@ -186,6 +192,7 @@ def main(keyword, filepath, tab_name, unique_tweets, max_num, workId):
 
 
 def scrap_twitter(keyword, workId):
+    csv.register_dialect('mydialect', delimiter='|', quoting=csv.QUOTE_ALL)
     files = os.listdir(base_path + "/profile")
     if "cookies-twitter.json" not in files:
         login_twitter()
@@ -202,4 +209,4 @@ def scrap_twitter(keyword, workId):
 if __name__ == "__main__":
     # login_twitter()
     # print(files)
-    scrap_twitter("流浪地球", 2)
+    scrap_twitter("舌尖上的中国", 18)

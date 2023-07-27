@@ -11,7 +11,8 @@ from scraper import base_path
 from scraper import nameMap
 from sql_dao.sql_utils import insert_comment
 from scraper.my_translater import youdao_translate
-from scraper.my_utils import parse_date_format, identify_lang_to_country, text_clean, analyze_polarity
+from scraper.my_utils import parse_date_format, identify_lang_to_country, text_clean, \
+    analyze_polarity, fan_to_jian
 
 scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 platform = "Youtube"
@@ -40,7 +41,7 @@ def list_channel_country(youtube, channel_id, comment):
 
 
 def scrap_reviews(keyword, workId):
-    return get_comments(keyword, 8, 1, 50, workId)
+    return get_comments(keyword, 10, 2, 50, workId)
 
 
 def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
@@ -125,9 +126,12 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
                             if country != "中国":
                                 translated = youdao_translate(text)
                                 time.sleep(1)
+                                if len(translated.strip()) == 0:
+                                    continue
                                 # translated = text
                             else:
                                 translated = text
+                            translated = fan_to_jian(translated)
                             success = insert_comment(text, translated, likeCount, workId,
                                            analyze_polarity(translated), country, platform, publishtime)
                             if not success:
@@ -146,15 +150,18 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
                                 further = False
             except HttpError as e:
                 print("An HttpError error occurred: %s" % e)
+                continue
     except ConnectionResetError as e:
         print("远程主机强迫关闭了一个现有的连接：%s" % e)
     print('get data count: ', str(count))
 
+    if not comments:
+        return
     ### write to csv file
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
     ### write to json file
@@ -174,4 +181,4 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
 
 
 if __name__ == "__main__":
-    scrap_reviews("流浪地球2", 4)
+    scrap_reviews("流浪地球1", 2)

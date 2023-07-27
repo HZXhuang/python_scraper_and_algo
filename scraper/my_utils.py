@@ -28,6 +28,13 @@ def identify_lang_to_country(sentence):
         return "未知国家"
 
 
+def fan_to_jian(sentence):
+    if len(sentence.strip()) == 0:
+        return "空文本"
+    s = SnowNLP(sentence)
+    return s.han
+
+
 def check_exists_and_make_dir(dir_name):
     dir_path = base_path + "/{}".format(dir_name)
     if dir_name not in os.listdir(base_path):
@@ -38,7 +45,7 @@ def check_exists_and_make_dir(dir_name):
 def text_clean(text):
     pattern = re.compile(r'<[^>]+>', re.S)
     result = pattern.sub("", text).replace("&quot;", "").replace("&#39;", "'").replace("\"", "")
-    result = emoji.replace_emoji(result, "")  # 清除表情包
+    result = emoji.replace_emoji(result, "").replace("\n", "").replace("|", "")  # 清除表情包
     # print(result)
     if len(result) >= max_comment_len:
         result = result[:max_comment_len - 1]
@@ -51,12 +58,26 @@ def analyze_polarity(text):
         return "中立"
     res = SnowNLP(text)
     # print(res.sentiments)
-    if res.sentiments < 0.45:
+    if res.sentiments <= 0.4:
         return "消极"
-    elif res.sentiments < 0.55:
+    elif res.sentiments <= 0.6:
         return "中立"
     else:
         return "积极"
+
+
+# 分析单词的词性，正面、中性、负面
+def analyze_word_polarity(text):
+    if len(text) == 0:
+        return "中性"
+    res = SnowNLP(text)
+    # print(res.sentiments)
+    if res.sentiments <= 0.4:
+        return "负面"
+    elif res.sentiments <= 0.6:
+        return "中性"
+    else:
+        return "正面"
 
 
 # 解析字符串时间，返回标准格式的日期
@@ -103,12 +124,13 @@ def chinese_to_pinyin(sentence):
 
 if __name__ == "__main__":
     # print(identify_lang_to_country("饥饿营销。。"))
-    res = text_clean('感恩大聰的解說❤️🫰')
-    print(res)
+    # res = text_clean('感恩大聰的解說❤️🫰')
+    # print(res)
     # text = "Who am I to write a review of a collection of 600 year old Chinese fairytales? This edition, with notes about the translation and a great introduction, and with its updated language, is accessible, fun, and despite what Goodreads thinks, I read this over the course of a week or so, in enjoyable chunks, probably more like what was intended. I recommend this to anyone who'd like a grounding in Chinese myth or culture that they don't already have."[:150]
     # print(text)
-    # print(analyze_polarity("   "))
+    # print(analyze_polarity("一般"))
     # print(parse_date_format("2023-07-18T04:59:05.000Z"))
     # print(chinese_to_pinyin("流浪地球"))
     # print(parse_relative_date("4天"))
+    print(fan_to_jian("EN ESPAÑOL porfavor o en ingles"))
     pass

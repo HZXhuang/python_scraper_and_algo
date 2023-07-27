@@ -9,7 +9,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import numpy as np
 from scraper import base_path, get_chrome_options
-from scraper.my_utils import text_clean, parse_date_format, analyze_polarity, identify_lang_to_country
+from scraper.my_utils import text_clean, parse_date_format, analyze_polarity, \
+    identify_lang_to_country, fan_to_jian
 from scraper.my_translater import youdao_translate
 from sql_dao.sql_utils import insert_comment
 
@@ -38,6 +39,7 @@ def scrap_reviews(keyword, workId):
         time.sleep(2)
     except exceptions.TimeoutException as e:
         print(e)
+    time.sleep(3)
     show_more_btn1 = driver.find_element(By.XPATH, '//a[@aria-label="Tap to show more reviews and ratings"]')
     # 使用 ActionChains 模拟鼠标操作
     # actions = ActionChains(driver)
@@ -89,18 +91,22 @@ def scrap_reviews(keyword, workId):
             time.sleep(0.5)
         else:
             translated = comment
+        translated = fan_to_jian(translated)
         post_time = parse_date_format(post_time)  # 解析日期
         sentiment = analyze_polarity(translated)  # 分析评论的情感极性
+        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        if not success:
+            continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-        insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+
     if not comments:
         return
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 
 if __name__ == "__main__":
-    scrap_reviews("Journey to the West Wu Cheng'en", 1)
+    scrap_reviews("The Romance of the Three Kingdoms", 9)

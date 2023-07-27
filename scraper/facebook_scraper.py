@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import json
 from scraper.my_utils import identify_lang_to_country, analyze_polarity, \
-    text_clean, parse_relative_date, parse_num
+    text_clean, parse_relative_date, parse_num, fan_to_jian
 from scraper.my_translater import youdao_translate
 from scraper import base_path, get_chrome_options
 from sql_dao.sql_utils import insert_comment
@@ -111,14 +111,18 @@ def extract_video_comments(driver, url, comments, workId, max_video_comment_num)
             post_time = "2023-03-04"
         country = identify_lang_to_country(comment)
         if country != "中国":
-            # translated = youdao_translate(comment)
-            # time.sleep(0.5)
-            translated = comment
+            translated = youdao_translate(comment)
+            time.sleep(0.5)
+            # translated = comment
         else:
             translated = comment
+        translated = fan_to_jian(translated)  # 转换成简体中文
         sentiment = analyze_polarity(translated)
+        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        if not success:
+            continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-        # insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+
     pass
 
 
@@ -163,9 +167,13 @@ def main(keyword, workId):
     video_url_list = []
     for video_wrapper in video_wrapper_list:
         video_url = video_wrapper.find_element(By.XPATH, './/a').get_attribute("href")
-        raw_watch_num = video_wrapper.find_element(
-            By.XPATH, './/div[@class="xu06os2 x1ok221b"]'
-        ).text.strip()
+        try:
+            raw_watch_num = video_wrapper.find_elements(
+                By.XPATH, './/div[@class="xu06os2 x1ok221b"]'
+            )[2].text.strip()
+        except (exceptions.NoSuchElementException, IndexError):
+            print("没有播放次数")
+            raw_watch_num = "日 · 1000次播放"
         print(raw_watch_num)
         print(video_url)
         try:
@@ -193,7 +201,7 @@ def main(keyword, workId):
     data = np.array(comments)
     df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                      'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 
@@ -205,4 +213,4 @@ def scrap_reviews(keyword, workId):
 
 
 if __name__ == "__main__":
-    scrap_reviews("哪吒之魔童降世", 12)
+    scrap_reviews("舌尖上的中国", 18)

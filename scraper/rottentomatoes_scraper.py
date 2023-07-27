@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
 from scraper.my_utils import identify_lang_to_country, text_clean, \
-    parse_date_format, analyze_polarity
+    parse_date_format, analyze_polarity, fan_to_jian
 from scraper.my_translater import youdao_translate
 from sql_dao.sql_utils import insert_comment
 
@@ -20,6 +20,7 @@ def scrap_reviews(keyword, workId):
     time.sleep(3)
     get_all_comments(web, keyword, workId)
     return True
+
 
 def movie_search(web, keyword):
     web.get("https://www.rottentomatoes.com/search?search={}".format(keyword))
@@ -80,14 +81,17 @@ def get_current_page_audience_comment(comment_divs, comments, workId):
             # translated = comment
         else:
             translated = comment
+        translated = fan_to_jian(translated)
         try:
             post_time = parse_date_format(div.find_element(By.XPATH, './/span[@data-qa="review-duration"]').text)
         except exceptions.NoSuchElementException:
             post_time = "2020-03-02"
         likes = str(random.randint(0, 40))
         sentiment = analyze_polarity(translated)
+        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        if not success:
+            continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-        insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
 
 
 def get_all_page_critics_comment(web, url, comments, workId):
@@ -144,15 +148,17 @@ def get_all_comments(web, keyword, workId):
         time.sleep(5)
         get_all_page_audience_comment(web, url, comments, workId)
         # 存储为csv文件
+        if not comments:
+            return
         data = np.array(comments)
         df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
                                          'sentiment', 'country', 'platform', 'postTime'])
-        df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, encoding='utf-8')
+        df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     else:
         print("页面不存在")
         return
 
 
 if __name__ == '__main__':
-    scrap_reviews("the wandering earth", 2)
+    scrap_reviews("the wandering earth", 4)
     pass
