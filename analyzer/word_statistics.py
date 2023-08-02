@@ -10,8 +10,13 @@ import pandas as pd
 import numpy as np
 from pymysql.err import ProgrammingError, MySQLError
 from tkinter import _flatten
+import gensim
+from gensim import corpora
+from gensim.models import LdaModel, CoherenceModel
 
-node_num = 25
+import matplotlib.pyplot as plt
+import matplotlib
+
 base_dir = base_path = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -29,13 +34,15 @@ def get_stopwords_list():
                  open(base_dir + '/data/stopwords_cn.txt', "r", encoding="utf-8").readlines()]
     #  停用词补充
     stopwords.append("~")
+    stopwords.append("http")
+    stopwords.append("https")
     # ///
     return stopwords
 
 
 # 对句子进行中文分词
 def seg_depart(sentence):
-    print('正在分词')
+    # print('正在分词')
     sentence_depart = jieba.cut(sentence.strip())
     # 创建一个停用词列表
     stopwords = get_stopwords_list()
@@ -53,6 +60,45 @@ def seg_depart(sentence):
 def extract_term(sentence):
     tags = jieba.analyse.extract_tags(sentence, topK=100)
     return " ".join(tags)
+
+
+# 计算coherence 主题一致性
+def coherence(num_topics, corpus, dictionary, data_set):
+    ldamodel = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=30, random_state=1)
+    print(ldamodel.print_topics(num_topics=num_topics, num_words=10))
+    ldacm = CoherenceModel(model=ldamodel, texts=data_set, dictionary=dictionary, coherence='c_v')
+    print(ldacm.get_coherence())
+    return ldacm.get_coherence()
+
+
+def lda_extract_terms(df: pd.DataFrame):
+    data_set = []
+    for comment in df["translated"].tolist():
+        data_set.append(seg_depart(comment).split(" "))
+    dictionary = corpora.Dictionary(data_set)
+    corpus = [dictionary.doc2bow(text) for text in data_set]
+    # x = range(1, 15)
+    # # z = [perplexity(i) for i in x]  #如果想用困惑度就选这个
+    # y = [coherence(i, corpus, dictionary, data_set) for i in x]
+    # plt.plot(x, y)
+    # plt.xlabel('主题数目')
+    # plt.ylabel('coherence大小')
+    # plt.rcParams['font.sans-serif'] = ['SimHei']
+    # matplotlib.rcParams['axes.unicode_minus'] = False
+    # plt.title('主题-coherence变化情况')
+    # plt.show()
+    lda = LdaModel(corpus=corpus, id2word=dictionary, num_topics=3, passes=50, random_state=1)
+    topic_list = lda.print_topics()
+    print(lda.get_topics())
+    for topic in topic_list:
+        print(topic)
+    for i in lda.get_document_topics(corpus)[:]:
+        listj = []
+        for j in i:
+            listj.append(j[1])
+        bz = listj.index(max(listj))
+        print(i[bz][0])
+
 
 
 def count_from_file(file, top_limit=0):
@@ -130,6 +176,7 @@ def count_from_db(workId, country, platform, post_time):
             """.format(workId, country, platform, post_time, res_tuple[0], res_tuple[1], res_tuple[2])
     try:
         cursor.execute(sql_insert)
+        # print("写入数据库")
         conn.commit()  # 提交修改
     except (MySQLError, ProgrammingError):
         print("插入失败，有错误")
@@ -138,6 +185,7 @@ def count_from_db(workId, country, platform, post_time):
 
 def count_words_by_workId(workId):
     load_prefer_word_dict()  # 加载自定义词汇表
+    print("加载自定义词汇")
     sql1 = "select distinct country from raw_comment where workId = %d" % workId
     sql2 = "select distinct platform from raw_comment where workId = %d" % workId
     sql3 = "select distinct postTime from raw_comment where workId = %d" % workId
@@ -160,7 +208,7 @@ def compute_matrix(df: pd.DataFrame):
     content = []
     for review in reviews:
         div_words = extract_term(seg_depart(review))  # 提取评论的主题词
-        if len(div_words) > 0:
+        if len(div_words.strip()) > 0:
             content.append(div_words)
 
     # print(content)
@@ -173,6 +221,7 @@ def compute_matrix(df: pd.DataFrame):
     # print(word_fre[:high_freq_word_num])
     # word_fre[:high_freq_word_num].to_excel("./流浪地球词频统计表.xlsx")
     keywords = word_fre[:high_freq_word_num].index
+    # print(keywords)
     # freq = word_fre[:high_freq_word_num].tolist()
     # freq = list(map(lambda x: str(x), freq))
     # print(word_fre)
@@ -181,6 +230,7 @@ def compute_matrix(df: pd.DataFrame):
     # print(word_fre)
     matrix = np.zeros((len(keywords) + 1) * (len(keywords) + 1)).reshape(len(keywords) + 1, len(keywords) + 1).astype(
         str)
+    # print(matrix)
     matrix[0][0] = np.NaN
     matrix[1:, 0] = matrix[0, 1:] = keywords
 
@@ -202,22 +252,41 @@ def compute_matrix(df: pd.DataFrame):
 def generate_gram_matrix(workId, country, post_time):
     sql_query = """
         select translated from raw_comment
-        where workId = {} and country = "{}" and postTime = "{}"
-    """.format(workId, country, post_time)
+        where workId = {} 
+    """.format(workId)
+    if country != "" and country != "全球":
+        sql_query += ' and country = "{}" '.format(country)
+    if post_time != "":
+        sql_query += ' and postTime = "{}" '.format(post_time)
     res_data = pd.read_sql(sql=sql_query, con=conn)
+    if len(res_data) == 0:
+        return {"nodes": [], "edges": []}
     gram_matrix = compute_matrix(res_data)
     # gram_matrix.index = gram_matrix.iloc[:, 0].tolist()
     # print(gram_matrix)
+    print(len(gram_matrix))
+    if len(gram_matrix) <= 1:
+        return {"nodes": [], "edges": []}
     word_names = gram_matrix[0].tolist()[1:]
     # print(word_names)
     aja_table = []
+    node_num = min(len(word_names), 25)
     for i in range(1, node_num+1):
-        for j in range(i + 1, node_num):
+        for j in range(i + 1, node_num + 1):
             val = int(gram_matrix.iloc[i, j])
             if val > 0:
-                aja_table.append([word_names[i], word_names[j], val])
+                aja_table.append([word_names[i-1], word_names[j-1], val])
     # 返回结点列表，即关键词 和 邻接表
     return {"nodes": word_names, "edges": aja_table}
+
+
+def lda_test():
+    sql_query = """
+            select translated from raw_comment
+            where workId = 4 and country = "美国"
+        """
+    res_data = pd.read_sql(sql=sql_query, con=conn)
+    lda_extract_terms(res_data)
 
 
 if __name__ == "__main__":
@@ -227,7 +296,8 @@ if __name__ == "__main__":
     # print(extract_term(res))
     # print(gather_info(res))
     # count_from_db(4, "中国", "豆瓣", "2023-01-2")
-    count_words_by_workId(1)
+    # count_words_by_workId(5)
     # res = generate_gram_matrix(4, "中国", "2023-01-23")
     # print(res)
+    lda_test()
     pass

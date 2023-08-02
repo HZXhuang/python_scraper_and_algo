@@ -188,7 +188,7 @@ def main(keyword, filepath, tab_name, unique_tweets, max_num, workId):
                 save_tweet_data_to_csv(comment, filepath, workId)
         last_pos, end_of_page = scroll_down_page(br, last_pos)
     print(unique_tweets)
-    print(len(unique_tweets))
+    print("当前爬取：", len(unique_tweets), "条评论")
 
 
 def scrap_twitter(keyword, workId):
@@ -209,4 +209,4 @@ def scrap_twitter(keyword, workId):
 if __name__ == "__main__":
     # login_twitter()
     # print(files)
-    scrap_twitter("舌尖上的中国", 18)
+    scrap_twitter("哪吒之魔童降世", 19)

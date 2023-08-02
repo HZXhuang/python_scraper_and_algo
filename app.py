@@ -182,20 +182,21 @@ def generate_network():
     post_time = args.get("post_time", default="", type=str)
     if workId == 0:
         return err_res("请输入作品ID")
-    if len(country.strip()) == 0:
-        return err_res("请输入国家")
-    if len(post_time.strip()) == 0:
-        return err_res("请输入日期")
     return success(generate_gram_matrix(workId, country, post_time))
 
 
+# 关键词提取、词性分析和词频统计的接口
 @app.route("/words_freq_sta", methods=["GET"])
 def words_freq_sta():
     args = request.args
     workId = args.get("workId", default=0, type=int)
     if workId == 0:
         return err_res("请输入作品ID")
-    return success()
+    res = count_words_by_workId(workId)
+    if res:
+        return success("关键词提取、词性分析、词频统计工作完成")
+    else:
+        return err_res("系统出现错误，请重试！")
 
 
 if __name__ == '__main__':

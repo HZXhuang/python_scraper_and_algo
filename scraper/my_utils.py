@@ -44,8 +44,10 @@ def check_exists_and_make_dir(dir_name):
 # 对文本进行清洗，去除html标签，将一些特殊字符进行转换
 def text_clean(text):
     pattern = re.compile(r'<[^>]+>', re.S)
-    result = pattern.sub("", text).replace("&quot;", "").replace("&#39;", "'").replace("\"", "")
-    result = emoji.replace_emoji(result, "").replace("\n", "").replace("|", "")  # 清除表情包
+    result = pattern.sub("", text).replace("&quot;", "")\
+        .replace("&#39;", "'").replace("\"", "")
+    result = emoji.replace_emoji(result, "").replace("\n", "")\
+        .replace("|", "")  # 清除表情包
     # print(result)
     if len(result) >= max_comment_len:
         result = result[:max_comment_len - 1]
