@@ -7,7 +7,7 @@ langid
 PyMySQL
 snownlp
 requests
-selenium~=4.0.0
+selenium
 pypinyin
 gevent
 google-api-python-client~=2.91.0
@@ -16,3 +16,5 @@ emoji
 jieba
 scikit-learn
 transformers
+gensim
+matplotlib
