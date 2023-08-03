@@ -59,6 +59,7 @@ def scrap_reviews(keyword, workId):
         except exceptions.NoSuchElementException:
             print("没有下一页按钮")
             break
+    web.quit()  # 退出浏览器
     if not comments:
         return
     data = np.array(comments)

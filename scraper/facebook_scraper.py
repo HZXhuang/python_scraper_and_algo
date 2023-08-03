@@ -196,6 +196,7 @@ def main(keyword, workId):
         time.sleep(1)
     # print(video_url_list)
     time.sleep(2)
+    br.quit()
     if not comments:
         return
     data = np.array(comments)

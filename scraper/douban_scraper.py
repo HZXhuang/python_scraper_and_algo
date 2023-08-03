@@ -94,6 +94,8 @@ def scrap_reviews(keyword, workId):
             break
         next_page.click()
         curr_page = curr_page + 1
+    time.sleep(2)
+    web.quit()
     if not comments:
         return
     data = np.array(comments)

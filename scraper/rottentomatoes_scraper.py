@@ -19,6 +19,7 @@ def scrap_reviews(keyword, workId):
     web.get("https://www.rottentomatoes.com")
     time.sleep(3)
     get_all_comments(web, keyword, workId)
+    web.quit()
     return True
 
 

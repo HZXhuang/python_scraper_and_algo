@@ -189,6 +189,7 @@ def main(keyword, filepath, tab_name, unique_tweets, max_num, workId):
         last_pos, end_of_page = scroll_down_page(br, last_pos)
     print(unique_tweets)
     print("当前爬取：", len(unique_tweets), "条评论")
+    br.quit()
 
 
 def scrap_twitter(keyword, workId):

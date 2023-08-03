@@ -99,6 +99,7 @@ def scrap_reviews(keyword, workId):
             continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
 
+    driver.quit()
     if not comments:
         return
     data = np.array(comments)

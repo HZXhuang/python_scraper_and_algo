@@ -154,7 +154,6 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
     except ConnectionResetError as e:
         print("远程主机强迫关闭了一个现有的连接：%s" % e)
     print('get data count: ', str(count))
-
     if not comments:
         return
     ### write to csv file
