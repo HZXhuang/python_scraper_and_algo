@@ -6,7 +6,7 @@ import random
 import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
-from scraper.my_utils import text_clean, parse_date_format, analyze_polarity
+from scraper.my_utils import text_clean, parse_date_format, analyze_polarity, fan_to_jian
 from sql_dao.sql_utils import insert_comment
 
 platform = "豆瓣"
@@ -19,16 +19,19 @@ def scrap_reviews(keyword, workId):
     comments = []
     # 把浏览器参数传入到网页驱动
     web = webdriver.Chrome(options=get_chrome_options(False))
-    web.get("https://www.douban.com")
-    # 找到输入框并填入内容
-    search_content = web.find_element(By.XPATH, '//*[@id="anony-nav"]/div[3]/form/span[1]/input')
-    search_content.send_keys(keyword)
-    time.sleep(1)
-    # 进行搜索
-    do_search = web.find_element(By.XPATH, '//*[@id="anony-nav"]/div[3]/form/span[2]/input')
-    do_search.click()
+    search_url = "https://www.douban.com/search?cat=1002&q={}".format(keyword)
+    web.get(search_url)
+    time.sleep(4)
+    # web.get("https://www.douban.com")
+    # # 找到输入框并填入内容
+    # search_content = web.find_element(By.XPATH, '//*[@id="anony-nav"]/div[3]/form/span[1]/input')
+    # search_content.send_keys(keyword)
+    # time.sleep(1)
+    # # 进行搜索
+    # do_search = web.find_element(By.XPATH, '//*[@id="anony-nav"]/div[3]/form/span[2]/input')
+    # do_search.click()
     # 选择搜索结果的第一个
-    select = web.find_element(By.XPATH, '//*[@id="content"]/div/div[1]/div[3]/div/div/div[1]/a')
+    select = web.find_element(By.XPATH, '//div[@class="title"]//a')
     select.click()
     time.sleep(1)
     windows = web.window_handles
@@ -75,7 +78,7 @@ def scrap_reviews(keyword, workId):
             except exceptions.NoSuchElementException:
                 print("没有点赞数")
                 likes = str(random.randint(0, 5))
-            translated = comment
+            translated = fan_to_jian(comment)
             sentiment = analyze_polarity(translated)
             success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
             if not success:
