@@ -1,3 +1,5 @@
+import gc
+
 from flask import Flask, jsonify, request
 from scraper.my_utils import check_exists_and_make_dir
 import scraper.youtube_scraper as youtube_sp
@@ -37,6 +39,7 @@ def scrap_facebook():
     if workId == 0:
         return "请输入监测作品ID"
     res = facebook_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -53,6 +56,7 @@ def scrap_twitter():
     if workId == 0:
         return "请输入监测作品ID"
     res = twitter_sp.scrap_twitter(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -69,6 +73,7 @@ def scrap_youtube():
     if workId == 0:
         return "请输入监测作品ID"
     res = youtube_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -85,6 +90,7 @@ def scrap_amazon():
     if workId == 0:
         return "请输入监测作品ID"
     res = amazon_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -101,6 +107,7 @@ def scrap_douban():
     if workId == 0:
         return "请输入监测作品ID"
     res = douban_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -117,6 +124,7 @@ def scrap_goodreads():
     if workId == 0:
         return "请输入监测作品ID"
     res = goodreads_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -133,6 +141,7 @@ def scrap_imdb():
     if workId == 0:
         return "请输入监测作品ID"
     res = imdb_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -149,6 +158,7 @@ def scrap_tomato():
     if workId == 0:
         return "请输入监测作品ID"
     res = tomato_sp.scrap_reviews(keyword, workId)
+    gc.collect()
     if res:
         return "爬取成功"
     else:
@@ -180,6 +190,7 @@ def generate_network():
     workId = args.get("workId", default=0, type=int)
     country = args.get("country", default="", type=str)
     post_time = args.get("post_time", default="", type=str)
+    gc.collect()
     if workId == 0:
         return err_res("请输入作品ID")
     return success(generate_gram_matrix(workId, country, post_time))
@@ -193,6 +204,7 @@ def words_freq_sta():
     if workId == 0:
         return err_res("请输入作品ID")
     res = count_words_by_workId(workId)
+    gc.collect()
     if res:
         return success("关键词提取、词性分析、词频统计工作完成")
     else:
