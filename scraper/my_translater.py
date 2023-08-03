@@ -3,10 +3,9 @@ import time
 import hashlib
 import uuid
 
-youdao_url = 'https://openapi.youdao.com/api'  # 有道api地址
-
 
 def base_translate(translate_text, to_lang="zh-CHS"):
+    youdao_url = 'https://openapi.youdao.com/api'  # 有道api地址
     # 翻译文本生成sign前进行的处理
     input_text = ""
 

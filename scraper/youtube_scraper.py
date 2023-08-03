@@ -8,22 +8,11 @@ import pandas as pd
 import json
 import pycountry
 from scraper import base_path
-from scraper import nameMap
+from scraper import get_nameMap
 from sql_dao.sql_utils import insert_comment
 from scraper.my_translater import youdao_translate
 from scraper.my_utils import parse_date_format, identify_lang_to_country, text_clean, \
     analyze_polarity, fan_to_jian
-
-scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
-platform = "Youtube"
-
-DEVELOPER_KEY = 'AIzaSyAp0oxZY8Sa6avNrEAmU3JZCKwW1_-okik'
-YOUTUBE_API_SERVICE_NAME = 'youtube'
-YOUTUBE_API_VERSION = 'v3'
-
-# 设置http代理，
-proxy_info = ProxyInfo(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 10808)
-http = Http(timeout=30, proxy_info=proxy_info)
 
 
 # 调用Youtube API的 channels.list 方法获取频道所属的国家
@@ -35,7 +24,7 @@ def list_channel_country(youtube, channel_id, comment):
 
     if 'country' in results['items'][0]['snippet']:
         country = results['items'][0]['snippet']['country']
-        return nameMap[pycountry.countries.get(alpha_2=country).name]
+        return get_nameMap()[pycountry.countries.get(alpha_2=country).name]
     else:
         return identify_lang_to_country(comment)
 
@@ -45,6 +34,16 @@ def scrap_reviews(keyword, workId):
 
 
 def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
+    scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+    platform = "Youtube"
+
+    DEVELOPER_KEY = 'AIzaSyAp0oxZY8Sa6avNrEAmU3JZCKwW1_-okik'
+    YOUTUBE_API_SERVICE_NAME = 'youtube'
+    YOUTUBE_API_VERSION = 'v3'
+
+    # 设置http代理，
+    proxy_info = ProxyInfo(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 10808)
+    http = Http(timeout=30, proxy_info=proxy_info)
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,

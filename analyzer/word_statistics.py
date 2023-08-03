@@ -4,7 +4,7 @@ import jieba
 from jieba.analyse import extract_tags
 import re
 from collections import Counter
-from sql_dao.sql_utils import conn
+from sql_dao.sql_utils import get_conn
 from scraper.my_utils import analyze_word_polarity
 import pandas as pd
 import numpy as np
@@ -147,6 +147,7 @@ def count_from_db(workId, country, platform, post_time):
         where workId = {} and country = "{}" and platform = "{}"
         and postTime = "{}";
     """.format(workId, country, platform, post_time)
+    conn = get_conn()
     comments = pd.read_sql(sql=sql, con=conn)
     if len(comments) == 0:
         # print("没有评论")
@@ -180,10 +181,15 @@ def count_from_db(workId, country, platform, post_time):
         conn.commit()  # 提交修改
     except (MySQLError, ProgrammingError):
         print("插入失败，有错误")
+    finally:
+        cursor.close()
+        conn.close()
+        del conn
     # print(len(cursor.fetchall()))
 
 
 def count_words_by_workId(workId):
+    conn = get_conn()
     load_prefer_word_dict()  # 加载自定义词汇表
     print("加载自定义词汇")
     sql1 = "select distinct country from raw_comment where workId = %d" % workId
@@ -200,6 +206,8 @@ def count_words_by_workId(workId):
         for platform in platforms:
             for post_time in post_times:
                 count_from_db(workId, country, platform, post_time)
+    conn.close()
+    del conn
     return True
 
 
@@ -250,6 +258,7 @@ def compute_matrix(df: pd.DataFrame):
 
 # 生成共现语义网络图的节点和边的信息
 def generate_gram_matrix(workId, country, post_time):
+    conn = get_conn()
     sql_query = """
         select translated from raw_comment
         where workId = {} 
@@ -276,18 +285,22 @@ def generate_gram_matrix(workId, country, post_time):
             val = int(gram_matrix.iloc[i, j])
             if val > 0:
                 aja_table.append([word_names[i-1], word_names[j-1], val])
+    conn.close()
+    del conn
     # 返回结点列表，即关键词 和 邻接表
     return {"nodes": word_names, "edges": aja_table}
 
 
 def lda_test():
+    conn = get_conn()
     sql_query = """
             select translated from raw_comment
             where workId = 4 and country = "美国"
         """
     res_data = pd.read_sql(sql=sql_query, con=conn)
     lda_extract_terms(res_data)
-
+    conn.close()
+    del conn
 
 if __name__ == "__main__":
     # load_prefer_word_dict()

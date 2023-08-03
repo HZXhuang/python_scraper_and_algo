@@ -2,14 +2,18 @@ import pymysql
 from pymysql.err import ProgrammingError
 from sql_dao import host, port, username, password, database, charset
 
-conn = pymysql.connect(
-    host=host,
-    port=port,
-    user=username,
-    password=password,
-    database=database,
-    charset=charset
-)
+
+def get_conn():
+    conn = pymysql.connect(
+        host=host,
+        port=port,
+        user=username,
+        password=password,
+        database=database,
+        charset=charset
+    )
+    return conn
+
 
 insert_comment_sql = """
     insert into raw_comment(content, translated, likes, workId, sentiment, country, platform, postTime) 
@@ -25,6 +29,7 @@ query_sql = """
 
 
 def insert_comment(content, translated, likes, workId, sentiment, country, platform, postTime):
+    conn = get_conn()
     cursor = conn.cursor()
     translated = translated.replace("\"", "'")
     try:
@@ -36,6 +41,8 @@ def insert_comment(content, translated, likes, workId, sentiment, country, platf
         return False
     finally:
         cursor.close()
+        conn.close()
+        del conn
 
 
 if __name__ == "__main__":

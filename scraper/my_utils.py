@@ -1,7 +1,7 @@
 import langid
 import random
 from scraper import base_path, max_comment_len
-from scraper import code_country_map
+from scraper import get_code_country_map
 import os
 import re
 from snownlp import SnowNLP
@@ -16,7 +16,7 @@ def identify_lang_to_country(sentence):
     la_id = langid.classify(sentence)
     # print(la_id)
     try:
-        country = code_country_map[la_id[0]]
+        country = get_code_country_map()[la_id[0]]
         # print(type(country))
         if type(country) == list:
             idx = random.randint(0, len(country) - 1)
