@@ -92,7 +92,7 @@ def collect_all_tweets_from_current_view(driver, limit=25):
      `lookback_limit` to only process the last `x` number of tweets extracted from the page in each iteration.
      You may need to play around with this number to get something that works for you. I've set the default
      based on my computer settings and internet speed, etc..."""
-    page_cards = driver.find_elements_by_xpath('//article[@data-testid="tweet"]')
+    page_cards = driver.find_elements(By.XPATH, '//article[@data-testid="tweet"]')
     if len(page_cards) <= limit:
         return page_cards
     else:
@@ -107,17 +107,17 @@ def extract_data_from_current_tweet_card(card):
         for the postdate on Exception if you which to keep this record. By default I am
         excluding these.
         """
-        post_time = card.find_element_by_xpath('.//time').get_attribute('datetime')
+        post_time = card.find_element(By.XPATH, './/time').get_attribute('datetime')
     except exceptions.NoSuchElementException as e:
         print(e)
         post_time = "2023-03-01T11:44:32.000Z"
     try:
-        _comment = card.find_element_by_xpath('.//div[@data-testid=\"tweetText\"]').text.replace("\n", "")
+        _comment = card.find_element(By.XPATH, './/div[@data-testid=\"tweetText\"]').text.replace("\n", "")
     except exceptions.NoSuchElementException as e:
         print(e)
         _comment = ""
     try:
-        likes = card.find_element_by_xpath('.//div[@data-testid="like"]').text.replace(",", "").strip()
+        likes = card.find_element(By.XPATH, './/div[@data-testid="like"]').text.replace(",", "").strip()
     except exceptions.NoSuchElementException as e:
         print(e)
         likes = "0"
