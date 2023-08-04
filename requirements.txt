@@ -4,7 +4,6 @@ pandas
 pycountry
 httplib2
 langid
-PyMySQL
 snownlp
 requests
 selenium
@@ -19,3 +18,4 @@ transformers
 gensim
 matplotlib
 uwsgi
+SQLAlchemy

@@ -4,15 +4,16 @@ import jieba
 from jieba.analyse import extract_tags
 import re
 from collections import Counter
-from sql_dao.sql_utils import get_conn
+from sql_dao import db_engine
 from scraper.my_utils import analyze_word_polarity
 import pandas as pd
 import numpy as np
-from pymysql.err import ProgrammingError, MySQLError
+from sqlalchemy.exc import ProgrammingError, SQLAlchemyError
 from tkinter import _flatten
 import gensim
 from gensim import corpora
 from gensim.models import LdaModel, CoherenceModel
+from sqlalchemy import text
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -100,7 +101,6 @@ def lda_extract_terms(df: pd.DataFrame):
         print(i[bz][0])
 
 
-
 def count_from_file(file, top_limit=0):
     with open(file, "r", encoding="utf-8") as f:
         content = f.read()
@@ -141,14 +141,14 @@ def count_from_str(content, top_limit=0):
 
 
 # 从数据库中取出评论数据进行分词和词频统计，然后再写入数据库的“词频统计表”
-def count_from_db(workId, country, platform, post_time):
+def count_from_db(workId, country, platform, post_time, conn):
     sql = """
         select translated from raw_comment 
         where workId = {} and country = "{}" and platform = "{}"
         and postTime = "{}";
     """.format(workId, country, platform, post_time)
-    conn = get_conn()
-    comments = pd.read_sql(sql=sql, con=conn)
+    comments = pd.read_sql(sql, conn)
+    # print(comments)
     if len(comments) == 0:
         # print("没有评论")
         return
@@ -159,7 +159,6 @@ def count_from_db(workId, country, platform, post_time):
         return
     # print(res_tuple)
     # print(comments)
-    cursor = conn.cursor()
     sql_query = """
         select * from word_freq_analy where workId = {} and country = "{}"
         and platform = "{}" and time = "{}";
@@ -168,44 +167,39 @@ def count_from_db(workId, country, platform, post_time):
         delete from word_freq_analy where workId = {} and country = "{}"
         and platform = "{}" and time = "{}";
     """.format(workId, country, platform, post_time)
-    cursor.execute(sql_query)
+    cursor = conn.execute(text(sql_query)).cursor
     if len(cursor.fetchall()) > 0:
-        cursor.execute(sql_delete)
+        conn.execute(text(sql_delete))
     sql_insert = """
                 insert into word_freq_analy(workId, country, platform,
                 time, polarity, keywords, frequency) values({}, "{}", "{}", "{}", "{}", "{}", "{}");
-            """.format(workId, country, platform, post_time, res_tuple[0], res_tuple[1], res_tuple[2])
+            """.format(workId, country, platform, post_time,
+                       res_tuple[0], res_tuple[1], res_tuple[2])
     try:
-        cursor.execute(sql_insert)
+        conn.execute(text(sql_insert))
         # print("写入数据库")
         conn.commit()  # 提交修改
-    except (MySQLError, ProgrammingError):
+        # print("插入成功")
+    except (SQLAlchemyError, ProgrammingError):
         print("插入失败，有错误")
     finally:
         cursor.close()
-        conn.close()
-        del conn
     # print(len(cursor.fetchall()))
 
 
 def count_words_by_workId(workId):
-    conn = get_conn()
+    conn = db_engine.connect()
     load_prefer_word_dict()  # 加载自定义词汇表
     print("加载自定义词汇")
-    sql1 = "select distinct country from raw_comment where workId = %d" % workId
-    sql2 = "select distinct platform from raw_comment where workId = %d" % workId
-    sql3 = "select distinct postTime from raw_comment where workId = %d" % workId
+    sql1 = "select distinct country, platform, postTime from raw_comment where workId = %d" % workId
     # 分别获取workId号作品的评论所属的国家列表、平台列表、发布时间列表
-    countries = pd.read_sql(sql1, con=conn)["country"].tolist()
-    platforms = pd.read_sql(sql2, con=conn)["platform"].tolist()
-    post_times = pd.read_sql(sql3, con=conn)["postTime"].tolist()
+    df = pd.read_sql(sql1, con=conn)
     # print(countries)
     # print(platforms)
     # print(post_times)
-    for country in countries:
-        for platform in platforms:
-            for post_time in post_times:
-                count_from_db(workId, country, platform, post_time)
+    for i in range(len(df)):
+        count_from_db(workId, df["country"][i], df["platform"][i], df["postTime"][i], conn)
+
     conn.close()
     del conn
     return True
@@ -258,7 +252,7 @@ def compute_matrix(df: pd.DataFrame):
 
 # 生成共现语义网络图的节点和边的信息
 def generate_gram_matrix(workId, country, post_time):
-    conn = get_conn()
+    conn = db_engine.connect()
     sql_query = """
         select translated from raw_comment
         where workId = {} 
@@ -292,7 +286,7 @@ def generate_gram_matrix(workId, country, post_time):
 
 
 def lda_test():
-    conn = get_conn()
+    conn = db_engine.connect()
     sql_query = """
             select translated from raw_comment
             where workId = 4 and country = "美国"
@@ -302,6 +296,7 @@ def lda_test():
     conn.close()
     del conn
 
+
 if __name__ == "__main__":
     # load_prefer_word_dict()
     # res = seg_depart("纵观中国科幻电影，《流浪地球2》无疑是破天荒的存在。不过从两个纬度——电影制作、科幻品位来分析，寻找优秀之余的缺憾，才是批评的价值。电影在这两个范畴内都存在着诸多缺失。 （1）制作 面子十足，里子不足。 面子是声光画和娱乐性，里子是剧情台本和剪辑。 娱乐性此处指...  ")
@@ -309,8 +304,8 @@ if __name__ == "__main__":
     # print(extract_term(res))
     # print(gather_info(res))
     # count_from_db(4, "中国", "豆瓣", "2023-01-2")
-    # count_words_by_workId(5)
-    # res = generate_gram_matrix(4, "中国", "2023-01-23")
-    # print(res)
-    lda_test()
+    # count_words_by_workId(19)
+    res = generate_gram_matrix(4, "中国", "2023-01-23")
+    print(res)
+    # lda_test()
     pass
