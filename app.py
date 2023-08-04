@@ -21,11 +21,9 @@ check_exists_and_make_dir("profile")
 @app.route('/')
 def hello_world():  # put application's code here
     json_output = {
-        "code": 0,
+        "code": "0",
         "msg": "响应成功",
-        "data": [
-
-        ]
+        "data": None
     }
     return jsonify(json_output)
 
@@ -36,15 +34,15 @@ def scrap_facebook():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = facebook_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_twitter', methods=["GET"])
@@ -53,15 +51,15 @@ def scrap_twitter():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = twitter_sp.scrap_twitter(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_youtube', methods=["GET"])
@@ -70,15 +68,15 @@ def scrap_youtube():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = youtube_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_amazon', methods=["GET"])
@@ -87,15 +85,15 @@ def scrap_amazon():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = amazon_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_douban', methods=["GET"])
@@ -104,15 +102,15 @@ def scrap_douban():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = douban_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_goodreads', methods=["GET"])
@@ -121,15 +119,15 @@ def scrap_goodreads():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = goodreads_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_imdb', methods=["GET"])
@@ -138,15 +136,15 @@ def scrap_imdb():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = imdb_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 @app.route('/scrap_tomato', methods=["GET"])
@@ -155,15 +153,15 @@ def scrap_tomato():
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
     if not keyword:
-        return "请输入关键词"
+        return err_res("请输入关键词")
     if workId == 0:
-        return "请输入监测作品ID"
+        return err_res("请输入监测作品ID")
     res = tomato_sp.scrap_reviews(keyword, workId)
     gc.collect()
     if res:
-        return "爬取成功"
+        return success()
     else:
-        return "爬取失败"
+        return err_res("爬取失败")
 
 
 def success(data=""):
@@ -207,7 +205,7 @@ def words_freq_sta():
     res = count_words_by_workId(workId)
     gc.collect()
     if res:
-        return success("关键词提取、词性分析、词频统计工作完成")
+        return success()
     else:
         return err_res("系统出现错误，请重试！")
 
