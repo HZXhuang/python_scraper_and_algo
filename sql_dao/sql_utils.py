@@ -1,6 +1,6 @@
 from sql_dao import db_engine
 from sqlalchemy import text
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import ProgrammingError, StatementError
 
 
 # def get_conn():
@@ -36,7 +36,7 @@ def insert_comment(content, translated, likes, workId, sentiment, country, platf
                                                     sentiment, country, platform, postTime)))
         conn.commit()
         return True
-    except ProgrammingError:
+    except (ProgrammingError, StatementError):
         print("sql语法错误")
         return False
     finally:
