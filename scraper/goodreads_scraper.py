@@ -59,7 +59,7 @@ def scrap_reviews(keyword, workId):
         except exceptions.NoSuchElementException as e:
             print(e)
             break
-        print(show_more_btn2.text)
+        # print(show_more_btn2.text)
         driver.execute_script("arguments[0].click();", show_more_btn2)
         time.sleep(8)
     comment_wrappers = driver.find_elements(By.XPATH, '//section[@class="ReviewCard__content"]')

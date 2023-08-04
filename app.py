@@ -12,6 +12,7 @@ import scraper.IMDb_scraper as imdb_sp
 import scraper.rottentomatoes_scraper as tomato_sp
 from analyzer.word_statistics import generate_gram_matrix, count_words_by_workId
 
+
 app = Flask(__name__)
 check_exists_and_make_dir("out")
 check_exists_and_make_dir("profile")

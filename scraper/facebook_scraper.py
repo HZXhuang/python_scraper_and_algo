@@ -175,7 +175,7 @@ def main(keyword, workId):
             print("没有播放次数")
             raw_watch_num = "日 · 1000次播放"
         print(raw_watch_num)
-        print(video_url)
+        # print(video_url)
         try:
             raw_watch_num = re.findall(r'日 ·(.*?)次播放', raw_watch_num, re.S)[0]
         except IndexError:

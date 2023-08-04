@@ -187,7 +187,7 @@ def main(keyword, filepath, tab_name, unique_tweets, max_num, workId):
                 unique_tweets.add(tweet_id)
                 save_tweet_data_to_csv(comment, filepath, workId)
         last_pos, end_of_page = scroll_down_page(br, last_pos)
-    print(unique_tweets)
+    # print(unique_tweets)
     print("当前爬取：", len(unique_tweets), "条评论")
     br.quit()
 

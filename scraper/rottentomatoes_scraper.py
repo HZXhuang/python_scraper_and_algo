@@ -28,7 +28,7 @@ def movie_search(web, keyword):
     try:
         first_li = web.find_elements(By.XPATH, './/search-page-media-row[@data-qa="data-row"]')[0]
         aLink = first_li.find_element(By.XPATH, './/a[@data-qa="info-name"]').get_attribute("href")
-        print(aLink)
+        # print(aLink)
         return aLink
     except (exceptions.NoSuchElementException, exceptions.ElementNotInteractableException) as e:
         print(e)
