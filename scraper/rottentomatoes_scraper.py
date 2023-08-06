@@ -151,10 +151,10 @@ def get_all_comments(web, keyword, workId):
         # 存储为csv文件
         if not comments:
             return
-        data = np.array(comments)
-        df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
-                                         'sentiment', 'country', 'platform', 'postTime'])
-        df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
+        # data = np.array(comments)
+        # df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
+        #                                  'sentiment', 'country', 'platform', 'postTime'])
+        # df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     else:
         print("页面不存在")
         return

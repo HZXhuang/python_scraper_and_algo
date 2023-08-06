@@ -25,9 +25,9 @@ def get_element_by_xpath(driver, xpath_pattern):
 def scrap_reviews(keyword, workId):
     comments = []
     base_url = "https://www.imdb.com"
-    driver = webdriver.Chrome(options=get_chrome_options(False))
+    driver = webdriver.Chrome(options=get_chrome_options())
     driver.get("https://www.imdb.com/find/?s=tt&q={}&ref_=nv_sr_sm".format(keyword))
-    time.sleep(10)
+    time.sleep(5)
     title_list = driver.find_elements(By.XPATH, '//section[@data-testid="find-results-section-title"]/div[2]/ul/li')
     search_urls = []  # 具体的电影详情链接列表
     for title in title_list:
@@ -108,10 +108,10 @@ def scrap_reviews(keyword, workId):
     driver.quit()
     if not comments:
         return
-    data = np.array(comments)
-    df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
-                                     'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
+    # data = np.array(comments)
+    # df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
+    #                                  'sentiment', 'country', 'platform', 'postTime'])
+    # df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 

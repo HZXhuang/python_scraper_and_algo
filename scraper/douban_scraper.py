@@ -98,10 +98,10 @@ def scrap_reviews(keyword, workId):
     web.quit()
     if not comments:
         return
-    data = np.array(comments)
-    df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
-                                     'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
+    # data = np.array(comments)
+    # df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
+    #                                  'sentiment', 'country', 'platform', 'postTime'])
+    # df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
 

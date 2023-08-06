@@ -10,13 +10,21 @@ def get_chrome_options(config_proxy=True):
     chrome_options = webdriver.ChromeOptions()
     if config_proxy:  # 是否添加代理
         chrome_options.add_argument("--proxy-server={}".format(proxy))
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument('--disable-gpu')
+    # chrome_options.add_argument("--headless")
+    # chrome_options.add_argument("--no-sandbox")
+    # chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                                '(KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
     chrome_options.add_experimental_option("detach", True)
     chrome_options.add_argument('lang=zh-CN,zh,zh-TW,en-US,en')
     chrome_options.add_argument('disable-notifications')
     chrome_options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    prefs = {
+        'profile.managed_default_content_settings.images': 2,
+        'profile.managed_default_content_settings.notifications': 2,
+        'intl.accept_languages': 'zh-CN,zh;q=0.9,en;q=0.5',
+    }
+    chrome_options.add_experimental_option('prefs', prefs)
 
     return chrome_options
 

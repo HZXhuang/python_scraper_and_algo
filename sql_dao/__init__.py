@@ -8,5 +8,5 @@ password = "123456"
 database = "analysis_sys_db"
 charset = "utf8mb4"
 
-db_engine = create_engine("mysql+pymysql://root:123456@120.79.225.116/analysis_sys_db"
+db_engine = create_engine("mysql+pymysql://root:123456@localhost/analysis_sys_db"
                           "?charset=utf8mb4")

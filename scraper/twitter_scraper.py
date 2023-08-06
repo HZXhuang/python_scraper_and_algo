@@ -192,7 +192,7 @@ def main(keyword, filepath, tab_name, unique_tweets, max_num, workId):
     br.quit()
 
 
-def scrap_twitter(keyword, workId):
+def scrap_reviews(keyword, workId):
     csv.register_dialect('mydialect', delimiter='|', quoting=csv.QUOTE_ALL)
     files = os.listdir(base_path + "/profile")
     if "cookies-twitter.json" not in files:
@@ -210,4 +210,4 @@ def scrap_twitter(keyword, workId):
 if __name__ == "__main__":
     # login_twitter()
     # print(files)
-    scrap_twitter("哪吒之魔童降世", 19)
+    scrap_reviews("哪吒之魔童降世", 19)

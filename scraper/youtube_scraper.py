@@ -156,10 +156,10 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
     if not comments:
         return
     ### write to csv file
-    data = np.array(comments)
-    df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
-                                     'sentiment', 'country', 'platform', 'postTime'])
-    df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
+    # data = np.array(comments)
+    # df = pd.DataFrame(data, columns=['content', 'translated', 'likes', 'workId',
+    #                                  'sentiment', 'country', 'platform', 'postTime'])
+    # df.to_csv(base_path + '/out/{}_{}.csv'.format(keyword, platform), index=False, sep="|", encoding='utf-8')
     return True
 
     ### write to json file

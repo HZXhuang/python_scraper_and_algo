@@ -20,10 +20,11 @@ insert_comment_sql = """
     values("{}", "{}", {}, {}, "{}", "{}", "{}", "{}");
 """
 
-# cursor = conn.cursor()
-query_sql = """
-    select * from user;
+insert_work_score_sql = """
+    insert into work_score(workId, score, platform) values({}, {}, "{}");
 """
+
+# cursor = conn.cursor()
 # df = pd.read_sql(query_sql, con=conn)
 # print(df)
 
@@ -34,6 +35,20 @@ def insert_comment(content, translated, likes, workId, sentiment, country, platf
     try:
         conn.execute(text(insert_comment_sql.format(content, translated, likes, workId,
                                                     sentiment, country, platform, postTime)))
+        conn.commit()
+        return True
+    except (ProgrammingError, StatementError):
+        print("sql语法错误")
+        return False
+    finally:
+        conn.close()
+        del conn
+
+
+def insert_work_score(workId, score, platform):
+    conn = db_engine.connect()
+    try:
+        conn.execute(text(insert_work_score_sql.format(workId, score, platform)))
         conn.commit()
         return True
     except (ProgrammingError, StatementError):
