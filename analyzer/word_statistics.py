@@ -4,7 +4,7 @@ import jieba
 from jieba.analyse import extract_tags
 import re
 from collections import Counter
-from sql_dao import db_engine
+from sql_dao import db_engine, get_db_session
 from scraper.my_utils import analyze_word_polarity
 import pandas as pd
 import numpy as np
@@ -252,7 +252,8 @@ def compute_matrix(df: pd.DataFrame):
 
 # 生成共现语义网络图的节点和边的信息
 def generate_gram_matrix(workId, country, post_time):
-    conn = db_engine.connect()
+    sess = get_db_session()
+    conn = sess.connection()
     sql_query = """
         select translated from raw_comment
         where workId = {} 
@@ -279,8 +280,9 @@ def generate_gram_matrix(workId, country, post_time):
             val = int(gram_matrix.iloc[i, j])
             if val > 0:
                 aja_table.append([word_names[i-1], word_names[j-1], val])
-    conn.close()
-    del conn
+    sess.commit()
+    sess.close()
+    del sess
     # 返回结点列表，即关键词 和 邻接表
     return {"nodes": word_names, "edges": aja_table}
 
