@@ -24,6 +24,15 @@ insert_work_score_sql = """
     insert into work_score(workId, score, platform) values({}, {}, "{}");
 """
 
+insert_work_sql = """
+    insert into monitor_work(name, category, labels, citeUrl, imgUrl, content, postTime) 
+    values("{}", "{}", "{}", "{}", "{}", "{}", "{}");
+"""
+
+insert_recommend_work_sql = """
+    insert into recommend_work(userId, workId, score) values({}, {}, {});
+"""
+
 # cursor = conn.cursor()
 # df = pd.read_sql(query_sql, con=conn)
 # print(df)
@@ -59,6 +68,37 @@ def insert_work_score(workId, score, platform):
         del conn
 
 
+
+
+
+def insert_work(name, category, label, workUrl, imgUrl, content, postTime):
+    conn = db_engine.connect()
+    content = content.replace("\"", "")
+    # cursor = conn.cursor()
+    try:
+        conn.execute(text(insert_work_sql.format(name, category, label, workUrl, imgUrl, content, postTime)))
+        conn.commit()
+        return True
+    except (ProgrammingError, StatementError):
+        print("sql语法错误")
+        return False
+    finally:
+        conn.close()
+        del conn
+
+
+def insert_recommend_work(userId, workId, score, conn):
+    try:
+        conn.execute(text(insert_recommend_work_sql.format(userId, workId, score)))
+        conn.commit()
+        return True
+    except (ProgrammingError, StatementError):
+        print("sql语法错误")
+        return False
+
+
 if __name__ == "__main__":
     # print(insert_comment_sql.format("真实一部好电影", "30", 1, "正面", "美国", "Youtube", "2020-05-23"))
-    insert_comment("This is a' \"good movie", "中共那來的量子連晶片都沒有還吹牛作夢吧....流浪地球2我也", "30", 1, "积极", "美国", "Youtube", "-05-23")
+    # insert_comment("This is a' \"good movie", "中共那來的量子連晶片都沒有還吹牛作夢吧....流浪地球2我也", "30", 1, "积极", "美国", "Youtube", "-05-23")
+    insert_work('流浪地球', '影视', '科幻 动作', '111', '111', '222', '2020-02-01')
+    pass

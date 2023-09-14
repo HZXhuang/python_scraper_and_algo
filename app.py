@@ -16,6 +16,7 @@ from scraper.goodreads_score_scraper import scrap_score as scrap_score_goodreads
 from scraper.rottentomatoes_score_scraper import scrap_score as scrap_score_tomatoes
 from scraper.imdb_score_scraper import scrap_score as scrap_score_imdb
 from analyzer.word_statistics import generate_gram_matrix, count_words_by_workId
+from recommend.work_recommend import recommend
 
 
 app = Flask(__name__)
@@ -302,6 +303,16 @@ def words_freq_sta():
         return err_res("请输入作品ID")
     res = count_words_by_workId(workId)
     gc.collect()
+    if res:
+        return success()
+    else:
+        return err_res("系统出现错误，请重试！")
+
+
+# 个性化推荐接口
+@app.route("/recommend", methods=["GET"])
+def person_recommend():
+    res = recommend()
     if res:
         return success()
     else:
