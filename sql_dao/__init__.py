@@ -13,7 +13,7 @@ database = "analysis_sys_db"
 charset = "utf8mb4"
 
 db_engine = create_engine("mysql+pymysql://{}:{}@{}/{}?charset={}"
-                          .format(username, urlquote("123456"), host, database, charset),
+                          .format(username, urlquote(password), host, database, charset),
                           pool_size=15, pool_recycle=1800, pool_timeout=60)
 
 
