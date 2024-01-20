@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
 from scraper.my_utils import identify_lang_to_country, text_clean, \
-    parse_date_format, analyze_polarity, fan_to_jian
+    parse_date_format, analyze_polarity, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
-from sql_dao.sql_utils import insert_comment
+from sql_dao.sql_utils import insert_comment, detect_duplicated_comment
 
 platform = "IMDb"
 
@@ -32,8 +32,8 @@ def scrap_reviews(keyword, workId):
     search_urls = []  # 具体的电影详情链接列表
     for title in title_list:
         search_urls.append(title.find_element(By.XPATH, './/a').get_attribute("href"))
-    if len(search_urls) >= 3:
-        search_limit = 3
+    if len(search_urls) >= 2:
+        search_limit = 2
     else:
         search_limit = len(search_urls)
     for i in range(0, len(search_urls)):
@@ -54,7 +54,7 @@ def scrap_reviews(keyword, workId):
             try:
                 load_more_btn = driver.find_element(By.XPATH, '//button[@id="load-more-trigger"]')
                 if not load_more_btn.is_displayed():
-                    print("'加载更多按钮不可见")
+                    print("加载更多按钮不可见")
                     break
                 driver.execute_script("window.scrollTo(0, document.body.scrollHeight - 1000)")
                 time.sleep(2)
@@ -88,6 +88,7 @@ def scrap_reviews(keyword, workId):
                 likes = str(random.randint(0, 5))
             comment = text_clean(comment)
             country = identify_lang_to_country(comment)
+            lang = identify_lang(comment)
             if country != "中国":
                 translated = youdao_translate(comment)
                 # translated = comment
@@ -99,7 +100,10 @@ def scrap_reviews(keyword, workId):
             likes = likes[:space_idx]
             post_time = parse_date_format(post_time)
             sentiment = analyze_polarity(translated)
-            success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+            dup = detect_duplicated_comment(workId, country, platform, post_time, comment)
+            if dup:
+                continue
+            success = insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
             if not success:
                 continue
             comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])

@@ -9,17 +9,17 @@ from selenium.webdriver.common.by import By
 from sql_dao.sql_utils import insert_work
 
 
-#使用requests按页获取电影信息 返回电影链接
+# 使用requests按页获取电影信息 返回电影链接
 def get_movie_href(start_page):
     page_size = 30
     url = "https://movie.douban.com/j/search_subjects?type=movie&tag=%E5%8D%8E%E8%AF%AD&sort=recommend&page_limit={}&page_start={}".format(page_size, start_page*page_size)
     header = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.76"}
     response = requests.get(url,  headers=header)
     html_str = response.text
-    #得到的数据直接是json数据，所以直接处理
-    str = json.loads(html_str)
-    #返回列表数据
-    movieList = str["subjects"]
+    # 得到的数据直接是json数据，所以直接处理
+    data = json.loads(html_str)
+    # 返回列表数据
+    movieList = data["subjects"]
     link_list = []
     for movie in movieList:
         link_list.append(movie['url'])

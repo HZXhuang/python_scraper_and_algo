@@ -5,7 +5,8 @@ from scraper.my_utils import check_exists_and_make_dir
 from scraper.youtube_scraper import scrap_reviews as scrap_reviews_youtube
 from scraper.facebook_scraper import scrap_reviews as scrap_reviews_facebook
 from scraper.twitter_scraper import scrap_reviews as scrap_reviews_twitter
-from scraper.douban_scraper import scrap_reviews as scrap_reviews_douban
+from scraper.douban_scraper import scrap_movie
+from scraper.douban_scraper import scrap_book
 from scraper.IMDb_scraper import scrap_reviews as scrap_reviews_imdb
 from scraper.goodreads_scraper import scrap_reviews as scrap_reviews_goodreads
 from scraper.rottentomatoes_scraper import scrap_reviews as scrap_reviews_tomatoes
@@ -119,9 +120,9 @@ def scrap_amazon():
         return err_res("爬取失败")
 
 
-# 爬取豆瓣评论
-@app.route('/scrap_douban', methods=["GET"])
-def scrap_douban():
+# 爬取豆瓣影视评论
+@app.route('/scrap_douban_movie', methods=["GET"])
+def scrap_douban_movie():
     args = request.args
     keyword = args.get("keyword", default="", type=str)
     workId = args.get("workId", default=0, type=int)
@@ -129,7 +130,25 @@ def scrap_douban():
         return err_res("请输入关键词")
     if workId == 0:
         return err_res("请输入监测作品ID")
-    res = scrap_reviews_douban(keyword, workId)
+    res = scrap_movie(keyword, workId)
+    gc.collect()
+    if res:
+        return success()
+    else:
+        return err_res("爬取失败")
+
+
+# 爬取豆瓣图书评论
+@app.route('/scrap_douban_book', methods=["GET"])
+def scrap_douban_book():
+    args = request.args
+    keyword = args.get("keyword", default="", type=str)
+    workId = args.get("workId", default=0, type=int)
+    if not keyword:
+        return err_res("请输入关键词")
+    if workId == 0:
+        return err_res("请输入监测作品ID")
+    res = scrap_book(keyword, workId)
     gc.collect()
     if res:
         return success()

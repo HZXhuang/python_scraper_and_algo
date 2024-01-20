@@ -16,11 +16,13 @@ def scrap_score(workId, keyword):
     web = webdriver.Chrome(options=chrome_options)
     # 根据关键字搜索
     web.get("https://www.douban.com/search?q={}".format(keyword))
+    time.sleep(2)
     # 选择搜索结果的第一个
     try:
-        select = web.find_element(By.XPATH, '//div[@class="title"]//a')
+        select = web.find_element(By.XPATH, '//div[@class="DouWeb-SR-subject-info-title"]//a')
     except exceptions.NoSuchElementException:
         print("搜索结果为空")
+        web.quit()
         return False
     select.click()
     time.sleep(2)

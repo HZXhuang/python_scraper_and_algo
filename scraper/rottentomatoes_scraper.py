@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
 from scraper.my_utils import identify_lang_to_country, text_clean, \
-    parse_date_format, analyze_polarity, fan_to_jian
+    parse_date_format, analyze_polarity, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
-from sql_dao.sql_utils import insert_comment
+from sql_dao.sql_utils import insert_comment, detect_duplicated_comment
 
 platform = "烂番茄"
 
@@ -47,6 +47,7 @@ def get_current_page_critics_comment(comment_divs, comments, workId):
             print("评论内容为空")
             continue
         country = identify_lang_to_country(comment)
+        lang = identify_lang(comment)
         if country != "中国":  # 翻译
             # translated = youdao_translate(comment)
             # time.sleep(0.5)
@@ -60,8 +61,11 @@ def get_current_page_critics_comment(comment_divs, comments, workId):
             post_time = "2023-03-04"
         likes = str(random.randint(0, 40))
         sentiment = analyze_polarity(translated)
+        dup = detect_duplicated_comment(workId, country, platform, post_time, comment)
+        if dup:
+            continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
-        insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
 
 
 def get_current_page_audience_comment(comment_divs, comments, workId):
@@ -76,6 +80,7 @@ def get_current_page_audience_comment(comment_divs, comments, workId):
             print("评论内容为空")
             continue
         country = identify_lang_to_country(comment)
+        lang = identify_lang(comment)
         if country != "中国":  # 翻译
             translated = youdao_translate(comment)
             time.sleep(0.5)
@@ -89,7 +94,10 @@ def get_current_page_audience_comment(comment_divs, comments, workId):
             post_time = "2020-03-02"
         likes = str(random.randint(0, 40))
         sentiment = analyze_polarity(translated)
-        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        dup = detect_duplicated_comment(workId, country, platform, post_time, comment)
+        if dup:
+            continue
+        success = insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
         if not success:
             continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])

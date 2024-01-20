@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from scraper import base_path, get_chrome_options
 from scraper.my_utils import text_clean, parse_date_format, analyze_polarity, \
-    identify_lang_to_country, fan_to_jian
+    identify_lang_to_country, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
 from sql_dao.sql_utils import insert_comment
 
@@ -40,13 +40,17 @@ def scrap_reviews(keyword, workId):
     except exceptions.TimeoutException as e:
         print(e)
     time.sleep(3)
-    show_more_btn1 = driver.find_element(By.XPATH, '//a[@aria-label="Tap to show more reviews and ratings"]')
-    # 使用 ActionChains 模拟鼠标操作
-    # actions = ActionChains(driver)
-    # actions.move_to_element(show_more_btn1).click().perform()   # 点击获取更多评论
-    # 使用 JavaScript 执行单击事件
-    driver.execute_script("arguments[0].click();", show_more_btn1)  # 用 JavaScript 执行单击事件
-    time.sleep(15)
+    try:
+        show_more_btn1 = driver.find_element(By.XPATH, '//a[@aria-label="Tap to show more reviews and ratings"]')
+        # 使用 ActionChains 模拟鼠标操作
+        # actions = ActionChains(driver)
+        # actions.move_to_element(show_more_btn1).click().perform()   # 点击获取更多评论
+        # 使用 JavaScript 执行单击事件
+        driver.execute_script("arguments[0].click();", show_more_btn1)  # 用 JavaScript 执行单击事件
+        time.sleep(15)
+    except exceptions.NoSuchElementException:
+        pass
+
     for i in range(9):
         try:
             show_more_btn2 = driver.find_elements(
@@ -85,6 +89,7 @@ def scrap_reviews(keyword, workId):
             likes = str(random.randint(0, 5))
         comment = text_clean(comment)  # 清洗
         country = identify_lang_to_country(comment)
+        lang = identify_lang(comment)
         if country != "中国":  # 将不是中文的评论翻译成中文
             translated = youdao_translate(comment)
             # translated = comment
@@ -94,7 +99,7 @@ def scrap_reviews(keyword, workId):
         translated = fan_to_jian(translated)
         post_time = parse_date_format(post_time)  # 解析日期
         sentiment = analyze_polarity(translated)  # 分析评论的情感极性
-        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        success = insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
         if not success:
             continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])

@@ -9,10 +9,10 @@ import json
 import pycountry
 from scraper import base_path
 from scraper import get_nameMap
-from sql_dao.sql_utils import insert_comment
+from sql_dao.sql_utils import insert_comment, detect_duplicated_comment
 from scraper.my_translater import youdao_translate
 from scraper.my_utils import parse_date_format, identify_lang_to_country, text_clean, \
-    analyze_polarity, fan_to_jian
+    analyze_polarity, fan_to_jian, identify_lang
 
 
 # 调用Youtube API的 channels.list 方法获取频道所属的国家
@@ -30,7 +30,7 @@ def list_channel_country(youtube, channel_id, comment):
 
 
 def scrap_reviews(keyword, workId):
-    return get_comments(keyword, 10, 2, 50, workId)
+    return get_comments(keyword, 7, 2, 40, workId)
 
 
 def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
@@ -122,6 +122,7 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
                             publishtime = parse_date_format(comment['snippet']['publishedAt'])
                             # channelId = comment['snippet']['authorChannelId']["value"]
                             country = identify_lang_to_country(text)
+                            language = identify_lang(text)
                             if country != "中国":
                                 translated = youdao_translate(text)
                                 time.sleep(1)
@@ -131,7 +132,10 @@ def get_comments(keyword, max_videos, max_pages, max_comment_cnt, workId):
                             else:
                                 translated = text
                             translated = fan_to_jian(translated)
-                            success = insert_comment(text, translated, likeCount, workId,
+                            dup = detect_duplicated_comment(workId, country, platform, publishtime, text)
+                            if dup:
+                                continue
+                            success = insert_comment(text, translated, language, likeCount, workId,
                                            analyze_polarity(translated), country, platform, publishtime)
                             if not success:
                                 continue

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scraper import base_path, get_chrome_options
 from scraper.my_utils import identify_lang_to_country, text_clean, \
-    parse_date_format, analyze_polarity, fan_to_jian
+    parse_date_format, analyze_polarity, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
 from sql_dao.sql_utils import insert_comment
 
@@ -46,6 +46,7 @@ def scrap_reviews(keyword, workId):
     except exceptions.NoSuchElementException:
         extract_comments(web, comments, workId)
         print("没有查看更多评论按钮")
+        web.quit()
         return
     time.sleep(0.5)
     while curr_page <= plan_page:
@@ -113,6 +114,7 @@ def extract_comments(web, comments, workId):
         # 去除国家里面的英文字母
         country = re.sub('[a-zA-Z]', '', country[0])
         lang_country = identify_lang_to_country(comment)
+        lang = identify_lang(comment)
         if lang_country != "中国":
             translated = youdao_translate(comment)
             time.sleep(0.5)
@@ -122,10 +124,10 @@ def extract_comments(web, comments, workId):
         translated = fan_to_jian(translated)
         sentiment = analyze_polarity(translated)
         # 把评论的所有信息插入列表中
-        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        success = insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
         if not success:
             continue
-        comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])
+        comments.append([comment, translated, lang, likes, workId, sentiment, country, platform, post_time])
 
 
 if __name__ == "__main__":

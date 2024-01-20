@@ -8,7 +8,7 @@ import time
 import json
 import csv
 from scraper.my_utils import identify_lang_to_country, analyze_polarity, \
-    text_clean, parse_date_format, fan_to_jian
+    text_clean, parse_date_format, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
 from scraper import base_path, get_chrome_options
 from sql_dao.sql_utils import insert_comment
@@ -68,6 +68,7 @@ def save_tweet_data_to_csv(records, filepath, workId, mode='a+'):
         if records:
             row = list(records)
             country = identify_lang_to_country(row[0])
+            lang = identify_lang(row[0])
 
             if country != "中国":
                 translated = youdao_translate(row[0])
@@ -80,7 +81,7 @@ def save_tweet_data_to_csv(records, filepath, workId, mode='a+'):
             row.insert(5, country)
             row.insert(6, "Twitter")
             row.append("Twitter")
-            success = insert_comment(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7])
+            success = insert_comment(row[0], row[1], lang, row[2], row[3], row[4], row[5], row[6], row[7])
             if not success:
                 return
             writer.writerow(row)

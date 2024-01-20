@@ -27,7 +27,7 @@ def base_translate(translate_text, to_lang="zh-CHS"):
 
     data = {
         'q': translate_text,  # 翻译文本
-        # 'from': "en",  # 源语言
+        # 'from': "en",  # 源语言  自动检测
         'to': to_lang,  # 翻译语言
         'appKey': app_id,  # 应用id
         'salt': uu_id,  # 随机生产的uuid码

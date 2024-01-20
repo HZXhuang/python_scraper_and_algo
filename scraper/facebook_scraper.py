@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import json
 from scraper.my_utils import identify_lang_to_country, analyze_polarity, \
-    text_clean, parse_relative_date, parse_num, fan_to_jian
+    text_clean, parse_relative_date, parse_num, fan_to_jian, identify_lang
 from scraper.my_translater import youdao_translate
 from scraper import base_path, get_chrome_options
 from sql_dao.sql_utils import insert_comment
@@ -110,6 +110,7 @@ def extract_video_comments(driver, url, comments, workId, max_video_comment_num)
             print("找不到时间")
             post_time = "2023-03-04"
         country = identify_lang_to_country(comment)
+        lang = identify_lang(comment)
         if country != "中国":
             translated = youdao_translate(comment)
             time.sleep(0.5)
@@ -118,7 +119,7 @@ def extract_video_comments(driver, url, comments, workId, max_video_comment_num)
             translated = comment
         translated = fan_to_jian(translated)  # 转换成简体中文
         sentiment = analyze_polarity(translated)
-        success = insert_comment(comment, translated, likes, workId, sentiment, country, platform, post_time)
+        success = insert_comment(comment, translated, lang, likes, workId, sentiment, country, platform, post_time)
         if not success:
             continue
         comments.append([comment, translated, likes, workId, sentiment, country, platform, post_time])

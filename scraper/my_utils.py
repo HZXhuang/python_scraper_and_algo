@@ -1,7 +1,7 @@
 import langid
 import random
 from scraper import base_path, max_comment_len
-from scraper import get_code_country_map
+from scraper import get_code_country_map, get_code_lang_map
 import os
 import re
 from snownlp import SnowNLP
@@ -28,6 +28,18 @@ def identify_lang_to_country(sentence):
         return "未知国家"
 
 
+# 识别句子的语言
+def identify_lang(sentence):
+    la_id = langid.classify(sentence)
+    # print(la_id)
+    la_id = la_id[0]
+    lang_map = get_code_lang_map()
+    if lang_map.get(la_id):
+        return lang_map[la_id]
+    else:
+        return "未知语言"
+
+
 def fan_to_jian(sentence):
     if len(sentence.strip()) == 0:
         return "空文本"
@@ -49,8 +61,8 @@ def text_clean(text):
     result = emoji.replace_emoji(result, "").replace("\n", "")\
         .replace("|", "")  # 清除表情包
     # print(result)
-    if len(result) >= max_comment_len:
-        result = result[:max_comment_len - 1]
+    # if len(result) >= max_comment_len:
+    #     result = result[:max_comment_len - 1]
     return result
 
 
@@ -134,5 +146,6 @@ if __name__ == "__main__":
     # print(parse_date_format("2023-07-18T04:59:05.000Z"))
     # print(chinese_to_pinyin("流浪地球"))
     # print(parse_relative_date("4天"))
-    print(fan_to_jian("EN ESPAÑOL porfavor o en ingles"))
+    # print(fan_to_jian("EN ESPAÑOL porfavor o en ingles"))
+    print(identify_lang("Deja am trecut-o pe raftul special, cu foarte puține cărți de altfel, dedicat capodoperelor SF. În mod sigur cel mai bun SF citit de mine anul acesta"))
     pass
